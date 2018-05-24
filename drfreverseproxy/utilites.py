@@ -33,12 +33,18 @@ def should_stream(proxy_response):
     a stream. This will be done by checking the proxy_response content-length
     and verify if its length is bigger than one stipulated by MIN_STREAMING_LENGTH.
 
+    Always returns False if MIN_STREAMING_LENGTH is set to None.
+
     :param proxy_response: An Instance of urllib3.response.HTTPResponse
     :returns: A boolean stating if the proxy_response should be treated as a stream
     """
     content_type = proxy_response.headers.get('Content-Type')
+    min_streaming_length = conf.MIN_STREAMING_LENGTH
 
     if is_html_content_type(content_type):
+        return False
+
+    if min_streaming_length is None:
         return False
 
     try:
@@ -46,7 +52,7 @@ def should_stream(proxy_response):
     except ValueError:
         content_length = 0
 
-    if not content_length or content_length > conf.MIN_STREAMING_LENGTH:
+    if not content_length or content_length > min_streaming_length:
         return True
 
     return False
