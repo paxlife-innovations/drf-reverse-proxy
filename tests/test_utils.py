@@ -4,10 +4,9 @@ from django.test import TestCase
 from mock import PropertyMock
 
 from drfreverseproxy import utilites as utils
+from drfreverseproxy.conf import conf
 
-from .utils import get_urlopen_mock, CustomProxyView
-
-from django.test import RequestFactory
+from .utils import get_urlopen_mock
 
 
 class UtilsTest(TestCase):
@@ -45,7 +44,7 @@ class UtilsTest(TestCase):
                          utils.is_html_content_type('application/pdf'))
 
     def test_not_should_stream(self):
-        SMALLER_THAN_MIN_STREAMING_LENGTH = '5'
+        SMALLER_THAN_MIN_STREAMING_LENGTH = str(conf.MIN_STREAMING_LENGTH - 1)
         headers = {'Content-Type': 'text/html',
                    'Content-Length': SMALLER_THAN_MIN_STREAMING_LENGTH}
 
@@ -59,7 +58,7 @@ class UtilsTest(TestCase):
         self.assertEqual(False, utils.should_stream(urlopen_mock))
 
     def test_should_be_stream(self):
-        BIGGER_THAN_MIN_STREAMING_LENGTH = '5120'
+        BIGGER_THAN_MIN_STREAMING_LENGTH = str(conf.MIN_STREAMING_LENGTH + 1)
         headers = {'Content-Type': 'application/pdf',
                    'Content-Length': 'asad'}
 
