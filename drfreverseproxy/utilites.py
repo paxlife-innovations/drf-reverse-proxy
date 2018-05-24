@@ -5,29 +5,8 @@ import logging
 
 from wsgiref.util import is_hop_by_hop
 
+from .conf import conf
 
-# List containing string constants that are used to represent headers
-# that can be ignored in the required_header function
-IGNORE_HEADERS = (
-    'HTTP_ACCEPT_ENCODING',  # We want content to be uncompressed so we remove the Accept-Encoding from original request
-    'HTTP_HOST',
-    'HTTP_REMOTE_USER',
-)
-
-# Default from HTTP RFC 2616
-#   See: http://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.7.1
-#: Variable that represent the default charset used
-DEFAULT_CHARSET = 'latin-1'
-
-#: List containing string constants that represents possible html content type
-HTML_CONTENT_TYPES = (
-    'text/html',
-    'application/xhtml+xml'
-)
-
-#: Variable used to represent a minimal content size required for response
-#: to be turned into stream
-MIN_STREAMING_LENGTH = 4 * 1024  # 4KB
 
 #: Regex used to find charset in a html content type
 _get_charset_re = re.compile(r';\s*charset=(?P<charset>[^\s;]+)', re.I)
@@ -41,7 +20,7 @@ def is_html_content_type(content_type):
     :returns:  A boolean value stating if the content_type is a valid html content type
     """
 
-    for html_content_type in HTML_CONTENT_TYPES:
+    for html_content_type in conf.HTML_CONTENT_TYPES:
         if content_type.startswith(html_content_type):
             return True
 
@@ -67,7 +46,7 @@ def should_stream(proxy_response):
     except ValueError:
         content_length = 0
 
-    if not content_length or content_length > MIN_STREAMING_LENGTH:
+    if not content_length or content_length > conf.MIN_STREAMING_LENGTH:
         return True
 
     return False
@@ -83,7 +62,7 @@ def get_charset(content_type):
     """
 
     if not content_type:
-        return DEFAULT_CHARSET
+        return conf.DEFAULT_CHARSET
 
     matched = _get_charset_re.search(content_type)
 
@@ -91,7 +70,7 @@ def get_charset(content_type):
         # Extract the charset and strip its double quotes
         return matched.group('charset').replace('"', '')
 
-    return DEFAULT_CHARSET
+    return conf.DEFAULT_CHARSET
 
 
 def required_header(header):
@@ -102,7 +81,7 @@ def required_header(header):
     :returns:       A boolean value that represent if the header is required
     """
 
-    if header in IGNORE_HEADERS:
+    if header in conf.IGNORE_HEADERS:
         return False
 
     if header.startswith('HTTP_') or header == 'CONTENT_TYPE':
