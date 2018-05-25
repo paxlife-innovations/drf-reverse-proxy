@@ -2,11 +2,9 @@ import logging
 
 from django.http import HttpResponse, StreamingHttpResponse
 
+from .conf import conf
 from .utilites import cookie_from_string, should_stream, set_response_headers
 
-
-#: Default number of bytes that are going to be read in a file lecture
-DEFAULT_AMT = 2 ** 16
 
 logger = logging.getLogger(__name__ + '.response')
 
@@ -29,8 +27,15 @@ def get_django_response(proxy_response):
     logger.debug('Content-Type: %s', content_type)
 
     if should_stream(proxy_response):
-        logger.info('Content-Length is bigger than %s', DEFAULT_AMT)
-        response = StreamingHttpResponse(proxy_response.stream(DEFAULT_AMT), status=status, content_type=content_type)
+        logger.info(
+            'Content-Length is bigger than %s',
+            conf.MIN_STREAMING_LENGTH
+        )
+        response = StreamingHttpResponse(
+            proxy_response.stream(conf.DEFAULT_AMT),
+            status=status,
+            content_type=content_type
+        )
     else:
         content = proxy_response.data or b''
         response = HttpResponse(content, status=status, content_type=content_type)
